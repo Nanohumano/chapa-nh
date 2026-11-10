@@ -1,4 +1,4 @@
-# Caja Chapa NH (v2)
+# Caja Chapa NH (v3)
 
 Para LILYGO T-Display S3 + LiPo 802540 (800 mAh) + 5 imanes de disco.
 Medidas de la placa tomadas del modelo 3D oficial de LILYGO.
@@ -9,7 +9,7 @@ Medidas de la placa tomadas del modelo 3D oficial de LILYGO.
 | `chapa_nh_tapa.stl` | Cara lisa sobre la cama, sin soportes | 5 huecos para imanes: 2 en cada extremo y 1 en el centro |
 | `chapa_nh_contraplaca.stl` | Cara lisa sobre la cama | Va por dentro de la ropa |
 
-- Exterior: 29,8 × 65,6 × 22,6 mm
+- Exterior: 29,8 × 65,6 × 22,6 mm, esquinas redondeadas (radio 2,5 mm)
 - PLA o PETG, capa 0,2 mm, 3 perímetros, relleno 20 %
 - Imanes previstos: disco 6 × 3 mm (hueco 6,4 × 3,3). Para otro tamaño:
   `IMAN_D=8 IMAN_G=2 python3 caja_chapa_nh.py .`

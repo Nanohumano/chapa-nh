@@ -56,6 +56,23 @@ OZ0, OZ1 = IZ0 - FRENTE, IZ1 + TAPA
 def B(x0, x1, y0, y1, z0, z1):
     return (min(x0, x1), max(x0, x1), min(y0, y1), max(y0, y1), min(z0, z1), max(z0, z1))
 
+RADIO = 2.5          # radio de las esquinas exteriores
+
+def esquinas(x0, x1, y0, y1, z0, z1, R=RADIO, n=25):
+    """Quita el material de fuera de un cuarto de círculo en las 4 esquinas
+    verticales (escalones de R/n mm, más finos que lo que imprime la boquilla)."""
+    ops = []
+    if R <= 0: return ops
+    for k in range(n):
+        ua, ub = R * k / n, R * (k + 1) / n
+        um = (ua + ub) / 2
+        v = R - (R * R - (R - um) ** 2) ** 0.5     # cuánto sobra en esta franja
+        if v <= 1e-4: continue
+        for sx, ex in ((1, x0), (-1, x1)):
+            for sy, ey in ((1, y0), (-1, y1)):
+                ops.append((0, B(ex + sx * ua, ex + sx * ub, ey - sy * 0.01, ey + sy * v, z0 - 1, z1 + 1)))
+    return ops
+
 # ------------------------------------------------------------------ CSG exacto
 def solido(ops):
     xs, ys, zs = set(), set(), set()
@@ -110,6 +127,7 @@ def stl(path, tris, nombre):
 # ------------------------------------------------------------------ cuerpo
 def cuerpo():
     ops = [(1, B(-OX, OX, OY0, OY1, OZ0, OZ1))]
+    ops += esquinas(-OX, OX, OY0, OY1, OZ0, OZ1)
     ops += [(0, B(-IX, IX, IY0, IY1, IZ0, OZ1 + 1))]                  # hueco
     # ventana de la pantalla (zona visible + 0.25)
     ops += [(0, B(-VIS_X - 0.25, VIS_X + 0.25, VIS_Y0 - 0.25, VIS_Y1 + 0.25, OZ0 - 1, IZ0 + 0.01))]
@@ -165,6 +183,7 @@ def contraplaca():
     x0, x1 = min(xs) - pa / 2 - m, max(xs) + pa / 2 + m
     y0, y1 = min(ys) - pa / 2 - m, max(ys) + pa / 2 + m
     ops = [(1, B(x0, x1, y0, y1, 0, G))]
+    ops += esquinas(x0, x1, y0, y1, 0, G)
     # aligerado: ventanas entre imanes
     ops += [(0, B(x0 + 3.5, -pa / 2 - 1.5, 4.0 + pa / 2 + 1.5, 47.0 - pa / 2 - 1.5, -1, G + 1))]
     ops += [(0, B(pa / 2 + 1.5, x1 - 3.5, 4.0 + pa / 2 + 1.5, 47.0 - pa / 2 - 1.5, -1, G + 1))]
