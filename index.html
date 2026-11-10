@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0f1417">
+<title>Chapa NH</title>
+<style>
+:root{
+  --bg:#f2f4f5; --card:#ffffff; --tx:#13191c; --mut:#5c676e; --line:#dbe1e4;
+  --acc:#1fa3b5; --acc-tx:#ffffff; --ok:#1e9e5a; --warn:#d9822b; --bad:#c94141;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0f1417; --card:#172024; --tx:#e8eef0; --mut:#92a0a7; --line:#25323a; }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:520px;margin:0 auto;padding:16px 16px 40px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 0 14px}
+h1{font-size:22px;margin:0;letter-spacing:.2px}
+h1 small{display:block;font-size:12px;font-weight:600;color:var(--acc);letter-spacing:1.5px}
+h2{font-size:14px;margin:0 0 10px;color:var(--mut);text-transform:uppercase;letter-spacing:1px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+button{font:inherit;border:0;border-radius:12px;padding:12px 16px;background:var(--acc);color:var(--acc-tx);font-weight:600;cursor:pointer}
+button.sec{background:transparent;color:var(--tx);border:1px solid var(--line)}
+button:disabled{opacity:.45}
+.estado{display:flex;gap:10px;flex-wrap:wrap;font-size:14px;color:var(--mut);margin-bottom:12px}
+.pill{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 11px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--bad)}
+.dot.on{background:var(--ok)}
+canvas{width:100%;aspect-ratio:320/170;border-radius:10px;display:block;background:#000;border:6px solid #1b1b1b}
+label{display:block;font-size:13px;color:var(--mut);margin:8px 0 4px}
+input[type=text],textarea,select{width:100%;font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+textarea{resize:vertical;min-height:70px}
+.fila{display:flex;gap:10px;align-items:center}
+.fila>*{flex:1}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.seg button{padding:10px 4px;background:var(--bg);color:var(--tx);border:1px solid var(--line);font-size:14px}
+.seg button.act{background:var(--acc);color:var(--acc-tx);border-color:var(--acc)}
+input[type=range]{width:100%;accent-color:var(--acc)}
+input[type=color]{width:100%;height:44px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:3px}
+.acciones{margin-top:12px;display:flex;gap:8px}
+.acciones button{flex:1}
+.nota{font-size:13px;color:var(--mut);margin:6px 0 0}
+#toast{position:fixed;left:16px;right:16px;bottom:16px;max-width:488px;margin:0 auto;background:#222;color:#fff;padding:12px 14px;border-radius:12px;font-size:14px;opacity:0;transform:translateY(10px);transition:.25s;pointer-events:none}
+#toast.ver{opacity:1;transform:none}
+footer{text-align:center;font-size:12px;color:var(--mut);margin-top:20px;letter-spacing:1px}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1><small>NANOHUMANO LABS</small>Chapa NH</h1>
+    <button id="btnCon">Conectar</button>
+  </header>
+
+  <div class="estado">
+    <span class="pill"><span id="dot" class="dot"></span><span id="conTxt">Sin conectar</span></span>
+    <span class="pill" id="bat">Batería —</span>
+    <span class="pill" id="ventana">BT —</span>
+  </div>
+
+  <div class="card">
+    <canvas id="prev" width="640" height="340"></canvas>
+    <p class="nota">Vista previa aproximada. En la chapa, mantén KEY 2 s para activar el Bluetooth.</p>
+  </div>
+
+  <div class="card">
+    <h2>Pantalla</h2>
+    <div class="seg" id="seg">
+      <button data-sc="0">Nombre</button>
+      <button data-sc="1">Reloj</button>
+      <button data-sc="2">Mensaje</button>
+      <button data-sc="3">Info</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Nombre</h2>
+    <label for="l1">Línea 1</label>
+    <input id="l1" type="text" maxlength="30" value="ISMAEL">
+    <label for="l2">Línea 2</label>
+    <input id="l2" type="text" maxlength="30" value="">
+    <label for="l3">Subtítulo (opcional)</label>
+    <input id="l3" type="text" maxlength="40" placeholder="Cargo, idiomas…">
+    <div class="acciones"><button id="btnNombre">Enviar a la chapa</button></div>
+  </div>
+
+  <div class="card">
+    <h2>Mensaje</h2>
+    <textarea id="msg" maxlength="90" placeholder="Escribe un mensaje corto"></textarea>
+    <div class="acciones"><button id="btnMsg">Mostrar mensaje</button></div>
+  </div>
+
+  <div class="card">
+    <h2>Aspecto</h2>
+    <label for="br">Brillo <span id="brTxt"></span></label>
+    <input id="br" type="range" min="5" max="255" value="140">
+    <div class="fila">
+      <div>
+        <label for="col">Color</label>
+        <input id="col" type="color" value="#1fa3b5">
+      </div>
+      <div>
+        <label for="th">Tema</label>
+        <select id="th"><option value="0">Oscuro</option><option value="1">Claro</option></select>
+      </div>
+    </div>
+    <p class="nota">Menos brillo = más horas de batería.</p>
+  </div>
+
+  <div class="card">
+    <h2>Chapa</h2>
+    <div class="acciones">
+      <button class="sec" id="btnHora">Sincronizar hora</button>
+      <button class="sec" id="btnOff">Apagar Bluetooth</button>
+    </div>
+  </div>
+
+  <footer>NANOHUMANO LABS · Chapa NH</footer>
+</main>
+<div id="toast"></div>
+
+<script>
+const SVC = '8f1c0001-2b7a-4e5c-9d3e-6a1b2c3d4e5f';
+const CMD = '8f1c0002-2b7a-4e5c-9d3e-6a1b2c3d4e5f';
+const CFG = '8f1c0003-2b7a-4e5c-9d3e-6a1b2c3d4e5f';
+const ST  = '8f1c0004-2b7a-4e5c-9d3e-6a1b2c3d4e5f';
+
+const $ = id => document.getElementById(id);
+const enc = new TextEncoder(), dec = new TextDecoder();
+let dev = null, cCmd = null, cola = Promise.resolve();
+let segRestantes = 0, temporizador = null;
+
+const estado = { l1:'ISMAEL', l2:'', l3:'', msg:'', br:140, sc:0, th:0, col:'1FA3B5' };
+
+function aviso(t){
+  const el = $('toast'); el.textContent = t; el.classList.add('ver');
+  clearTimeout(aviso.t); aviso.t = setTimeout(() => el.classList.remove('ver'), 2800);
+}
+
+function enCola(fn){ const p = cola.then(fn); cola = p.catch(() => {}); return p; }
+
+async function enviar(cmd){
+  if (!cCmd) { aviso('Conecta primero la chapa'); return false; }
+  const datos = enc.encode(cmd);
+  if (datos.length > 180) { aviso('Texto demasiado largo'); return false; }
+  try { await enCola(() => cCmd.writeValueWithResponse(datos)); return true; }
+  catch (e) { aviso('Error al enviar: ' + e.message); return false; }
+}
+
+function setConexion(txt, on){
+  $('conTxt').textContent = txt;
+  $('dot').classList.toggle('on', !!on);
+  $('btnCon').textContent = on ? 'Desconectar' : 'Conectar';
+}
+
+async function conectar(){
+  if (dev && dev.gatt.connected) { dev.gatt.disconnect(); return; }
+  if (!navigator.bluetooth) {
+    aviso('Este navegador no tiene Web Bluetooth. Usa Chrome en Android y abre la página por https.');
+    return;
+  }
+  try {
+    dev = await navigator.bluetooth.requestDevice({
+      filters: [{ namePrefix: 'NH-' }, { services: [SVC] }],
+      optionalServices: [SVC]
+    });
+    dev.addEventListener('gattserverdisconnected', desconectado);
+    setConexion('Conectando…', false);
+    const gatt = await dev.gatt.connect();
+    const s = await gatt.getPrimaryService(SVC);
+    cCmd = await s.getCharacteristic(CMD);
+    const cCfg = await s.getCharacteristic(CFG);
+    const cSt = await s.getCharacteristic(ST);
+    cSt.addEventListener('characteristicvaluechanged', e => leerEstado(e.target.value));
+    await cSt.startNotifications();
+    cargarCfg(JSON.parse(dec.decode(await cCfg.readValue())));
+    leerEstado(await cSt.readValue());
+    setConexion('Conectada', true);
+    await sincronizarHora(true);
+  } catch (e) {
+    if (e.name !== 'NotFoundError') aviso('No se pudo conectar: ' + e.message);
+    cCmd = null;
+    setConexion('Sin conectar', false);
+  }
+}
+
+function desconectado(){
+  cCmd = null;
+  setConexion('Sin conectar', false);
+  clearInterval(temporizador);
+  $('ventana').textContent = 'BT —';
+}
+
+function leerEstado(dv){
+  const [mv, pct, resto] = dec.decode(dv).split(',').map(Number);
+  if (!isNaN(mv)) $('bat').textContent = `Batería ${pct}% · ${(mv/1000).toFixed(2)} V`;
+  if (!isNaN(resto)) {
+    segRestantes = resto;
+    clearInterval(temporizador);
+    pintarVentana();
+    temporizador = setInterval(() => { if (segRestantes > 0) segRestantes--; pintarVentana(); }, 1000);
+  }
+}
+
+function pintarVentana(){
+  const m = Math.floor(segRestantes / 60), s = String(segRestantes % 60).padStart(2, '0');
+  $('ventana').textContent = `BT se apaga en ${m}:${s}`;
+}
+
+function cargarCfg(j){
+  Object.assign(estado, j);
+  $('l1').value = estado.l1; $('l2').value = estado.l2; $('l3').value = estado.l3;
+  $('msg').value = estado.msg; $('br').value = estado.br;
+  $('col').value = '#' + estado.col.toLowerCase(); $('th').value = String(estado.th);
+  refrescarUI();
+}
+
+async function sincronizarHora(silencioso){
+  const local = Math.floor(Date.now() / 1000) - new Date().getTimezoneOffset() * 60;
+  if (await enviar('T:' + local) && !silencioso) aviso('Hora sincronizada');
+}
+
+// ---------- Vista previa ----------
+const DIAS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+
+function partir(ctx, texto, maxW){
+  const pal = texto.split(/\s+/).filter(Boolean), lin = [];
+  let l = '';
+  for (const p of pal) {
+    const prueba = l ? l + ' ' + p : p;
+    if (!l || ctx.measureText(prueba).width <= maxW) l = prueba; else { lin.push(l); l = p; }
+  }
+  if (l) lin.push(l);
+  return lin;
+}
+
+function dibujarPreview(){
+  const cv = $('prev'), ctx = cv.getContext('2d');
+  const W = 320, H = 170, cx = 160;
+  ctx.setTransform(2, 0, 0, 2, 0, 0);
+  const oscuro = Number(estado.th) === 0;
+  const bg = oscuro ? '#000' : '#fff', fg = oscuro ? '#fff' : '#1b1d1f', sub = oscuro ? '#aaa' : '#6b6b6b';
+  const acc = '#' + estado.col;
+  const fuente = (peso, px) => `${peso} ${px}px system-ui,-apple-system,Roboto,sans-serif`;
+
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  const sc = Number(estado.sc);
+
+  if (sc === 0) {
+    const lin = [estado.l1, estado.l2].filter(Boolean);
+    const subH = estado.l3 ? 29 : 0;
+    const tam = [44, 33, 22, 16].find(px => {
+      ctx.font = fuente(700, px);
+      const w = Math.max(0, ...lin.map(s => ctx.measureText(s).width));
+      return w <= 290 && lin.length * px * 1.27 + subH <= 164;
+    }) || 16;
+    ctx.font = fuente(700, tam);
+    const lh = tam * 1.27, y = (H - (lin.length * lh + subH)) / 2;
+    ctx.fillStyle = fg;
+    lin.forEach((s, i) => ctx.fillText(s, cx, y + lh * i + lh * 0.75));
+    if (estado.l3) {
+      ctx.font = fuente(400, 17); ctx.fillStyle = sub;
+      ctx.fillText(estado.l3, cx, y + lin.length * lh + subH * 0.75);
+    }
+  } else if (sc === 1) {
+    const d = new Date();
+    ctx.fillStyle = fg; ctx.font = fuente(700, 84);
+    ctx.fillText(d.toTimeString().slice(0, 5), cx, 100);
+    ctx.font = fuente(400, 17); ctx.fillStyle = sub;
+    ctx.fillText(`${DIAS[d.getDay()]} ${d.getDate()} ${MESES[d.getMonth()]}`, cx, 154);
+  } else if (sc === 2) {
+    let lin = [], lh = 0;
+    for (const px of [26, 17, 13]) {
+      ctx.font = fuente(700, px); lh = px * 1.3;
+      lin = partir(ctx, estado.msg || ' ', 296);
+      if (lin.length * lh <= 164) break;
+    }
+    const y = (H - lin.length * lh) / 2;
+    ctx.fillStyle = fg;
+    lin.forEach((s, i) => ctx.fillText(s, cx, y + lh * i + lh * 0.75));
+  } else {
+    ctx.textAlign = 'left';
+    ctx.fillStyle = acc; ctx.font = fuente(700, 17); ctx.fillText('NANOHUMANO LABS', 20, 30);
+    ctx.fillStyle = fg; ctx.font = fuente(400, 13);
+    ctx.fillText($('bat').textContent.replace('·', '–'), 20, 62);
+    ctx.fillText(`Brillo: ${Math.round(estado.br * 100 / 255)}%`, 20, 86);
+    ctx.fillText(cCmd ? 'Bluetooth: conectado' : 'Bluetooth: apagado', 20, 110);
+    ctx.fillStyle = sub; ctx.fillText('Mantén KEY 2 s para conectar la app', 20, 150);
+  }
+  cv.style.filter = `brightness(${(0.35 + 0.65 * estado.br / 255).toFixed(2)})`;
+}
+
+function refrescarUI(){
+  document.querySelectorAll('#seg button').forEach(b => b.classList.toggle('act', Number(b.dataset.sc) === Number(estado.sc)));
+  $('brTxt').textContent = Math.round(estado.br * 100 / 255) + '%';
+  dibujarPreview();
+}
+
+// ---------- Eventos ----------
+$('btnCon').onclick = conectar;
+
+document.querySelectorAll('#seg button').forEach(b => b.onclick = async () => {
+  estado.sc = Number(b.dataset.sc); refrescarUI();
+  await enviar('SC:' + estado.sc);
+});
+
+['l1', 'l2', 'l3'].forEach(id => $(id).addEventListener('input', () => {
+  estado[id] = $(id).value; if (Number(estado.sc) !== 0) estado.sc = 0; refrescarUI();
+}));
+
+$('btnNombre').onclick = async () => {
+  const ok = await enviar('L1:' + $('l1').value.trim())
+          && await enviar('L2:' + $('l2').value.trim())
+          && await enviar('L3:' + $('l3').value.trim())
+          && await enviar('SC:0');
+  if (ok) aviso('Nombre actualizado');
+};
+
+$('msg').addEventListener('input', () => { estado.msg = $('msg').value; estado.sc = 2; refrescarUI(); });
+$('btnMsg').onclick = async () => {
+  const t = $('msg').value.replace(/\s+/g, ' ').trim();
+  if (await enviar('MSG:' + t) && await enviar('SC:2')) aviso('Mensaje enviado');
+};
+
+$('br').addEventListener('input', () => { estado.br = Number($('br').value); refrescarUI(); });
+$('br').addEventListener('change', () => enviar('BR:' + estado.br));
+
+$('col').addEventListener('input', () => { estado.col = $('col').value.slice(1).toUpperCase(); refrescarUI(); });
+$('col').addEventListener('change', () => enviar('COL:' + estado.col));
+
+$('th').addEventListener('change', () => { estado.th = Number($('th').value); refrescarUI(); enviar('TH:' + estado.th); });
+
+$('btnHora').onclick = () => sincronizarHora(false);
+$('btnOff').onclick = async () => { if (await enviar('OFF')) aviso('Bluetooth apagado en la chapa'); };
+
+if (!navigator.bluetooth) {
+  setConexion('Sin Web Bluetooth', false);
+}
+refrescarUI();
+setInterval(() => { if (Number(estado.sc) === 1) dibujarPreview(); }, 15000);
+</script>
+</body>
+</html>
