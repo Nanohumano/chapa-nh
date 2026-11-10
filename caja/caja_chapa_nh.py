@@ -20,7 +20,6 @@ import numpy as np, struct, sys, os
 HOLG = 0.30          # holgura alrededor de la placa
 PARED = 1.6          # paredes laterales
 FRENTE = 1.2         # grosor del marco delantero
-TAPA = 1.6           # grosor de la tapa trasera
 
 # Placa (modelo oficial)
 PCB_X = 12.75; PCB_Y1 = 60.78; PCB_Z0 = -1.2
@@ -38,8 +37,11 @@ BAT_Y0 = 7.8
 
 # Imanes (disco); el hueco es cuadrado, vale para discos
 IMAN_D, IMAN_G = float(os.environ.get("IMAN_D", 6.0)), float(os.environ.get("IMAN_G", 3.0))
-IMAN_XS = [-8.5, 0.0, 8.5]
 PIEL = 1.0            # plástico entre imán y ropa
+# 5 imanes: 2 en cada extremo + 1 en el centro (x, y). Van dentro de la tapa,
+# así que pueden ir encima de la batería; ninguno en la zona de la antena (y > 50)
+IMANES = [(-8.5, 4.0), (8.5, 4.0), (0.0, 25.5), (-8.5, 47.0), (8.5, 47.0)]
+TAPA = PIEL + IMAN_G + 0.3   # grosor de la tapa: piel + hueco del imán
 
 # ------------------------------------------------------------------ derivadas
 IX = LCD_X + HOLG                      # medio ancho interior
@@ -143,33 +145,32 @@ def cuerpo():
 # ------------------------------------------------------------------ tapa trasera
 CLT = 0.12
 def tapa():
-    # se modela con la cara exterior en z=0 y hacia arriba (posición de impresión)
+    # cara exterior en z=0 (posición de impresión); los huecos se abren hacia dentro
     W = IX - CLT
     ops = [(1, B(-W, W, IY0 + CLT, IY1 - CLT, 0, TAPA))]
-    # pestañas de cierre
-    for sx in (-1, 1):
+    for sx in (-1, 1):                                   # pestañas de cierre
         ops += [(1, B(sx * (W - 0.01), sx * (IX + 0.25), 19, 41, 0.45, 0.95))]
-    # alojamientos de imanes (lado USB, lejos de la antena)
-    pa = IMAN_D + 0.4; ph = IMAN_G + 0.3
-    alto_boss = PIEL + ph + 0.6          # desde la cara exterior
-    yc = 3.2
-    for xc in IMAN_XS:
-        ops += [(1, B(xc - pa / 2 - 0.8, xc + pa / 2 + 0.8, yc - pa / 2 - 0.8, yc + pa / 2 + 0.8, 0, alto_boss))]
-    for xc in IMAN_XS:
-        ops += [(0, B(xc - pa / 2, xc + pa / 2, yc - pa / 2, yc + pa / 2, PIEL, alto_boss + 1))]
-    # marca de orientación (USB) en la cara interior
-    ops += [(0, B(-1.5, 1.5, IY1 - 6, IY1 - 3, TAPA - 0.4, TAPA + 1))]
-    return ops, alto_boss
+    pa = IMAN_D + 0.4
+    for xc, yc in IMANES:
+        ops += [(0, B(xc - pa / 2, xc + pa / 2, yc - pa / 2, yc + pa / 2, PIEL, TAPA + 1))]
+    # flecha hacia el USB en la cara interior
+    ops += [(0, B(-1.0, 1.0, 12, 20, TAPA - 0.4, TAPA + 1))]
+    ops += [(0, B(-2.5, 2.5, 10, 12, TAPA - 0.4, TAPA + 1))]
+    return ops, TAPA
 
 def contraplaca():
-    pa = IMAN_D + 0.4; ph = IMAN_G + 0.3
-    L = (IMAN_XS[-1] - IMAN_XS[0]) + pa + 2 * 2.0
-    H = pa + 2 * 2.0
-    G = ph + PIEL
-    ops = [(1, B(-L / 2, L / 2, -H / 2, H / 2, 0, G))]
-    for xc in IMAN_XS:
-        ops += [(0, B(xc - pa / 2, xc + pa / 2, -pa / 2, pa / 2, PIEL, G + 1))]
-    return ops, (L, H, G)
+    # misma posición de imanes que la tapa (vista en espejo al ponerla enfrente)
+    pa = IMAN_D + 0.4; G = IMAN_G + 0.3 + PIEL; m = 2.2
+    xs = [x for x, _ in IMANES]; ys = [y for _, y in IMANES]
+    x0, x1 = min(xs) - pa / 2 - m, max(xs) + pa / 2 + m
+    y0, y1 = min(ys) - pa / 2 - m, max(ys) + pa / 2 + m
+    ops = [(1, B(x0, x1, y0, y1, 0, G))]
+    # aligerado: ventanas entre imanes
+    ops += [(0, B(x0 + 3.5, -pa / 2 - 1.5, 4.0 + pa / 2 + 1.5, 47.0 - pa / 2 - 1.5, -1, G + 1))]
+    ops += [(0, B(pa / 2 + 1.5, x1 - 3.5, 4.0 + pa / 2 + 1.5, 47.0 - pa / 2 - 1.5, -1, G + 1))]
+    for xc, yc in IMANES:
+        ops += [(0, B(xc - pa / 2, xc + pa / 2, yc - pa / 2, yc + pa / 2, PIEL, G + 1))]
+    return ops, (x1 - x0, y1 - y0, G)
 
 if __name__ == "__main__":
     out = sys.argv[1] if len(sys.argv) > 1 else "."
@@ -185,6 +186,6 @@ if __name__ == "__main__":
     print("Interior:      %.1f x %.1f x %.1f mm" % (2 * IX, IY1 - IY0, IZ1 - IZ0))
     print("Hueco bateria: %.1f mm de alto (bat %.1f)  y %.1f-%.1f (antena libre desde %.1f)" %
           (IZ1 - BAT_Z0, BAT_G, BAT_Y0, BAT_Y0 + BAT_L, BAT_Y0 + BAT_L))
-    print("Alojamiento imanes: tapa boss %.1f mm, tope bateria en y=%.1f" % (ab, 3.2 + (IMAN_D + 0.4) / 2 + 0.8))
+    print("Tapa: %.1f mm de grueso, 5 imanes" % ab)
     print("Contraplaca: %.1f x %.1f x %.1f mm" % dims)
     print("Triangulos:", len(c), len(t), len(p))
