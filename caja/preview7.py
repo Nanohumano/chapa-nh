@@ -6,7 +6,7 @@ spec = importlib.util.spec_from_file_location("c", "caja_chapa_nh.py"); c = impo
 def load(p):
     b = open(p, "rb").read(); n = struct.unpack("<I", b[80:84])[0]
     return np.frombuffer(b[84:84 + n * 50], dtype=np.dtype([("n", "<3f4"), ("v", "<9f4"), ("a", "<u2")]))["v"].reshape(-1, 3, 3).astype(float)
-cu = load("plana_1200mAh/chapa_nh_cuerpo.stl"); ta = load("plana_1200mAh/chapa_nh_tapa.stl"); pie = load("plana_1200mAh/chapa_nh_pie.stl")
+cu = load("v7/chapa_nh_cuerpo.stl"); ta = load("v7/chapa_nh_tapa.stl"); pie = load("v7/chapa_nh_pie.stl")
 bd = load(sys.argv[1])
 ta_b = ta.copy(); ta_b[..., 2] = c.OZ1 - ta_b[..., 2]
 bat = c.triangulos(*c.solido([(1, c.B(c.BX0 + 0.2, c.BX1 - 0.2, 10.0, 50.0, c.IZ0, c.IZ0 + 10.0))]))
@@ -21,7 +21,7 @@ def setup(ax, t, el, az, title):
     ax.set_xlim(m[0] - r, m[0] + r); ax.set_ylim(m[1] - r, m[1] + r); ax.set_zlim(m[2] - r, m[2] + r)
     ax.view_init(el, az); ax.set_axis_off(); ax.set_box_aspect((1, 1, 1)); ax.set_title(title, fontsize=12)
 # chapa sobre el pie
-a = np.radians(c.PIE_ANG); ca, sa = np.cos(a), np.sin(a); z0 = 3.0 + 3.0 * ca + 0.2
+a = np.radians(c.PIE_ANG); ca, sa = np.cos(a), np.sin(a); z0 = 4.0 - 0.8
 def al_pie(t):
     u = -t[..., 1]; v = c.XO1 - t[..., 0]; w = t[..., 2] - c.OZ1
     return np.stack([u, w * ca + v * sa, v * ca - w * sa + z0], -1)
@@ -47,7 +47,7 @@ ax.add_patch(plt.Rectangle((-c.PCB_X, c.LCD_Z), 2 * c.PCB_X, -c.LCD_Z + 2.0, fil
 ax.text(-9, c.LCD_Z + 4.5, "placa + pantalla", fontsize=9)
 ax.set_aspect("equal"); ax.set_xlim(c.XO0 - 2, c.XO1 + 2); ax.set_ylim(c.OZ0 - 2, c.OZ1 + 3); ax.invert_yaxis()
 ax.set_title("Corte: %.1f mm de grosor (antes 22,6)" % (c.OZ1 - c.OZ0), fontsize=12); ax.set_xlabel("mm")
-ax = fig.add_subplot(2, 3, 5, projection="3d"); draw(ax, pie, "#e8a33a"); setup(ax, pie, 25, 50, "Pie de mostrador (imanes por detrás)")
+ax = fig.add_subplot(2, 3, 5, projection="3d"); draw(ax, pie, "#e8a33a"); setup(ax, pie, 25, 50, "Pie de mostrador (imanes enrasados)")
 ax = fig.add_subplot(2, 3, 6, projection="3d"); draw(ax, pie, "#e8a33a")
 ch = np.concatenate([al_pie(cu), al_pie(ta_b)]); draw(ax, ch, "#2b2b2b")
 draw(ax, al_pie(bd[bd[..., 2].min(1) < -5.5]), "#1d3557"); setup(ax, np.concatenate([ch, pie]), 15, -70, "Chapa sobre el pie")
