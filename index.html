@@ -652,11 +652,33 @@ $('tabs').addEventListener('click', async e => {
   cfg.act = Number(b.dataset.v); refrescar();
   if (await enviar('PERF:' + cfg.act, true)) aviso('Ahora la lleva ' + perfilActivo().n);
 });
-['nom', 'emp'].forEach(id => $(id).addEventListener('input', () => { const p = perfilActivo(); if (id === 'nom') p.n = $(id).value.toUpperCase(); else p.e = $(id).value.toUpperCase(); sincSt(); }));
+// nombre y empresa se envían solos al dejar de escribir (y también con "Guardar")
+let tEscribir = null;
+['nom', 'emp'].forEach(id => $(id).addEventListener('input', () => {
+  const p = perfilActivo();
+  if (id === 'nom') p.n = $(id).value.toUpperCase(); else p.e = $(id).value.toUpperCase();
+  sincSt();
+  clearTimeout(tEscribir);
+  tEscribir = setTimeout(() => guardarTexto(true), 900);
+}));
+async function guardarTexto(sil) {
+  const p = perfilActivo();
+  if (!cCmd) { if (!sil) aviso('Conecta primero la chapa'); return false; }
+  const ok = await enviar('NOM:' + p.n.trim(), sil) && await enviar('EMP:' + p.e.trim(), sil);
+  if (!ok) return false;
+  // comprobar que la chapa lo ha guardado
+  try {
+    const j = JSON.parse(dec.decode(await enCola(() => cCfg.readValue())));
+    const q = j.perf && j.perf[j.act];
+    if (q && q.n === p.n.trim() && q.e === p.e.trim()) { pintarTabs(); if (!sil) aviso('Guardado en la chapa'); return true; }
+    aviso('La chapa no ha guardado el texto. Desconecta, vuelve a conectar y prueba otra vez.');
+  } catch (e) {}
+  return false;
+}
 $('btnPerfil').onclick = async () => {
   const p = perfilActivo();
-  const ok = await enviar('NOM:' + p.n.trim()) && await enviar('EMP:' + p.e.trim()) && await enviar('LET:' + p.f) && await enviar('TAM:' + p.s);
-  if (ok) { pintarTabs(); aviso('Perfil guardado'); }
+  clearTimeout(tEscribir);
+  if (await enviar('LET:' + p.f) && await enviar('TAM:' + p.s)) await guardarTexto(false);
 };
 $('btnBorrar').onclick = async () => {
   if (cfg.perf.length < 2) { aviso('Tiene que quedar al menos un perfil'); return; }
