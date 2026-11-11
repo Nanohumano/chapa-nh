@@ -137,11 +137,8 @@ def cuerpo():
     # RST lateral (x+)
     ry = (RST["y0"] + RST["y1"]) / 2
     ops += [(0, B(IX - 0.01, OX + 1, ry - 1.4, ry + 1.4, RST["z0"] - 0.3, RST["z1"] + 0.5))]
-    # apoyos de la placa: extremo antena (debajo del PCB, sin tocar la pantalla)
-    ops += [(1, B(-IX, IX, LCD_Y1 + 0.6, IY1, IZ0, PCB_Z0 - 0.05))]
-    # apoyos en las esquinas del lado USB (fuera de los botones) y topes del borde
+    # topes del borde del PCB en el lado USB
     for sx in (-1, 1):
-        ops += [(1, B(sx * 11.75, sx * IX, 4.7, 6.4, IZ0, PCB_Z0 - 0.05))]
         ops += [(1, B(sx * 12.2, sx * IX, IY0, -0.15, IZ0, 0.0))]
     # botones flexibles en el marco delantero: lengüeta + tetón que baja al pulsador
     for bx0, bx1 in BOTONES:

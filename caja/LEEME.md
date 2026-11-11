@@ -1,4 +1,4 @@
-# Caja Chapa NH (v3)
+# Caja Chapa NH (v4)
 
 Para LILYGO T-Display S3 + LiPo 802540 (800 mAh) + 5 imanes de disco.
 Medidas de la placa tomadas del modelo 3D oficial de LILYGO.
