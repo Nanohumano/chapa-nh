@@ -4,7 +4,7 @@
 
 Chapa de nombre digital con una **LILYGO T-Display S3**: se cambia desde el móvil por Bluetooth, la pueden compartir varias personas y tiene temas animados de Navidad, Halloween y un calendario de Adviento hasta Reyes. La caja se imprime en 3D y se sujeta a la ropa con imanes.
 
-- 🎬 **Vídeo:** [ENLACE YOUTUBE]
+- 🎬 **Vídeo:** https://youtu.be/ANPzw-ODm4M
 - 🖨️ **STL (Printables):** [ENLACE PRINTABLES]
 - 📱 **App de control:** https://nanohumano.github.io/chapa-nh/ (Chrome o Edge, en Android o PC con Bluetooth)
 
