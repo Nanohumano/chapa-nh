@@ -312,7 +312,104 @@ def pie():
     suelo = csg.from_tris(malla([(1, B(U0 - 20, U1 + 20, -40, 60, 0, 120))]))
     return csg.reparar_t(csg.to_tris(csg.intersect(A, suelo)))
 
+
+def _casco(puntos):
+    """Envolvente convexa -> triángulos con las normales hacia fuera."""
+    from scipy.spatial import ConvexHull
+    P = np.asarray(puntos, float); h = ConvexHull(P); c = P.mean(0); T = []
+    for f in h.simplices:
+        t = P[f]
+        if np.dot(np.cross(t[1] - t[0], t[2] - t[0]), t.mean(0) - c) < 0: t = t[[0, 2, 1]]
+        T.append(t)
+    return np.array(T)
+
+def pie_lowpoly():
+    """Pie de mostrador facetado (low poly). La cara delantera es plana e inclinada PIE_ANG;
+    los imanes van enrasados en ella (se pegan desde delante) para que la chapa agarre fuerte."""
+    import csg
+    pa = IMAN_D + 0.4; H = XO1 - XO0
+    U0, U1 = -OY1, -OY0; L = U1 - U0
+    a = np.radians(PIE_ANG); ca, sa = np.cos(a), np.sin(a)
+    REP = 3.0
+    z0 = REP * ca + 0.6
+    def W(u, v, w):                       # (u, v, w) de la cara delantera -> mundo
+        return (u, w * ca + v * sa, v * ca - w * sa + z0)
+    ch = 9.0                              # chaflanes de las esquinas superiores
+    E = 5.0                               # grueso de la placa
+    # placa frontal biselada, con esquinas achaflanadas de forma asimétrica
+    cara = [(U0, -REP), (U1, -REP), (U1, H - ch * 0.7), (U1 - ch * 1.3, H), (U0 + ch, H), (U0, H - ch)]
+    cm = (np.mean([q[0] for q in cara]), np.mean([q[1] for q in cara]))
+    trasera = [(u + (cm[0] - u) * 0.04, v + (cm[1] - v) * 0.05) for u, v in cara]   # bisel de ~1,5 mm
+    placa = csg.from_tris(_casco([W(u, v, 0) for u, v in cara] + [W(u, v, E) for u, v in trasera]))
+    # bloque trasero facetado, como una roca, que sujeta la placa hasta media altura
+    hv = 0.52 * H
+    P = [W(U0 + 3, hv - 4, E - 1), W(U0 + 0.4 * L, hv + 3, E - 1), W(U1 - 0.25 * L, hv - 1, E - 1), W(U1 - 2, hv - 7, E - 1),
+         W(U0 + 1, 0, E - 1), W(U1 - 1, 0, E - 1)]
+    P += [(U0 + 1.5, 27, 0), (U0 + 0.3 * L, 33, 0), (U0 + 0.62 * L, 35, 0), (U1 - 2, 29, 0),
+          (U0, 12, 0), (U1, 10, 0)]
+    P += [(U0 + 3, 21, 12), (U0 + 0.55 * L, 27, 15), (U1 - 4, 19, 10)]
+    cuerpo = csg.union(placa, csg.from_tris(_casco(P)))
+    # repisa donde apoya la chapa, con el frente biselado
+    R = [W(u, v, w) for u in (U0 + 1.5, U1 - 1.5) for v, w in ((0, 0), (0, -9.5), (-REP, -7.0), (-REP, 0))]
+    A = csg.union(cuerpo, csg.from_tris(_casco(R)))
+    # huecos de los imanes, abiertos por delante (el imán queda enrasado con la cara)
+    for xc, yc in IMANES:
+        u, v = -yc, XO1 - xc
+        caja = [W(u + du, v + dv, w) for du in (-pa / 2, pa / 2) for dv in (-pa / 2, pa / 2) for w in (-1, IMAN_G + 0.3)]
+        A = csg.subtract(A, csg.from_tris(_casco(caja)))
+    suelo = csg.from_tris(triangulos(*solido([(1, B(U0 - 20, U1 + 20, -40, 80, 0, 140))])))
+    return csg.reparar_t(csg.to_tris(csg.intersect(A, suelo)))
+
+def _losa_redonda(u0, u1, v0, v1, e, R=6.0, r=1.8, n=20, m=8):
+    """Puntos de una losa (u0..u1, v0..v1, grueso e) con esquinas de radio R y cantos de radio r."""
+    pts = []
+    for cu, cv, a0 in ((u1 - R, v1 - R, 0), (u0 + R, v1 - R, 90), (u0 + R, v0 + R, 180), (u1 - R, v0 + R, 270)):
+        for i in range(n + 1):
+            t = np.radians(a0 + 90.0 * i / n)
+            for j in range(m + 1):
+                q = np.pi * j / m - np.pi / 2
+                rr = (R - r) + r * np.cos(q)
+                pts.append((cu + rr * np.cos(t), cv + rr * np.sin(t), e / 2 + (e / 2 - 0) * np.sin(q) * (r / r)))
+    P = np.array(pts)
+    P[:, 2] = np.clip(P[:, 2], 0, e)            # tubo aplastado al grueso de la losa
+    return P
+
+def pie_moderno():
+    """Pie minimalista con todas las esquinas y cantos redondeados: placa, base y un tirante trasero.
+    Imanes enrasados en la cara delantera."""
+    import csg
+    pa = IMAN_D + 0.4; H = XO1 - XO0
+    U0, U1 = -OY1, -OY0; L = U1 - U0
+    a = np.radians(PIE_ANG); ca, sa = np.cos(a), np.sin(a)
+    E = 5.0; BASE = 4.0
+    z0 = BASE - 0.8
+    def W(P):                              # (u, v, w) -> mundo
+        P = np.asarray(P, float); u, v, w = P[:, 0], P[:, 1], P[:, 2]
+        return np.stack([u, w * ca + v * sa, v * ca - w * sa + z0], 1)
+    # placa: w de 0 (cara delantera) a E
+    placa = W(_losa_redonda(U0, U1, -4.0, H, E, R=7.0, r=2.0))
+    # base apoyada en la mesa
+    base = _losa_redonda(U0 + 2, U1 - 2, -12.0, 34.0, BASE, R=9.0, r=1.8)
+    # repisa: barra redondeada delante, abajo
+    rep = W(_losa_redonda(U0 + 3, U1 - 3, -4.0, 2.5, 9.5, R=1.6, r=1.5) - np.array([0, 0, 9.5]))
+    # tirante trasero: de la mitad de la placa al fondo de la base
+    hv = 0.55 * H
+    t1 = W(_losa_redonda(U0 + 8, U1 - 8, hv - 8, hv, E, R=4, r=1.8) + np.array([0, 0, E - 1.0]))
+    t2 = _losa_redonda(U0 + 8, U1 - 8, 26.0, 33.0, BASE, R=4, r=1.8)
+    A = csg.from_tris(_casco(placa))
+    for P in (base, rep, np.vstack([t1, t2])):
+        A = csg.union(A, csg.from_tris(_casco(P)))
+    for xc, yc in IMANES:
+        u, v = -yc, XO1 - xc
+        caja = W([(u + du, v + dv, w) for du in (-pa / 2, pa / 2) for dv in (-pa / 2, pa / 2) for w in (-1, IMAN_G + 0.3)])
+        A = csg.subtract(A, csg.from_tris(_casco(caja)))
+    suelo = csg.from_tris(triangulos(*solido([(1, B(U0 - 20, U1 + 20, -40, 80, 0, 140))])))
+    return csg.reparar_t(csg.to_tris(csg.intersect(A, suelo)))
+
 if __name__ == "__main__" and "--pie" in sys.argv:
     out = sys.argv[1]
-    stl(f"{out}/chapa_nh_pie.stl", pie(), "Chapa NH pie")
-    print("pie listo")
+    stl(f"{out}/chapa_nh_pie.stl", pie_moderno(), "Chapa NH pie")            # el principal
+    if "--todos" in sys.argv:                                                 # alternativas
+        stl(f"{out}/chapa_nh_pie_lowpoly.stl", pie_lowpoly(), "Chapa NH pie low poly")
+        stl(f"{out}/chapa_nh_pie_basico.stl", pie(), "Chapa NH pie basico")
+    print("pies listos")

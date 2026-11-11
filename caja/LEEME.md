@@ -10,6 +10,7 @@ Hay dos cajas. Las dos usan la misma placa (LILYGO T-Display S3), el mismo firmw
 | Medidas | 65,6 × 61,6 × **16,2 mm** | 29,8 × 65,6 × **22,6 mm** |
 | Forma | Casi cuadrada, más fina | Alargada, más gruesa |
 | Piezas | Cuerpo, tapa, contraplaca y **pie de mostrador** | Cuerpo, tapa y contraplaca |
+| Pie | ![pie](plana_1200mAh/pie.png) | — |
 | Imanes | 5 tapa + 5 contraplaca + 5 pie | 5 tapa + 5 contraplaca |
 
 ## Impresión (las dos)
@@ -23,10 +24,11 @@ Hay dos cajas. Las dos usan la misma placa (LILYGO T-Display S3), el mismo firmw
 - Mirándola de frente: pantalla arriba, batería abajo y USB a la derecha.
 - El hueco de la batería es más largo que la batería: sujétala con cinta de doble cara. El cable pasa por detrás de la placa.
 - El botón RST del canto queda hacia la batería: se pulsa con la tapa abierta.
-- El pie inclina la chapa 15° y la sujeta con los mismos imanes de la tapa.
+- El pie inclina la chapa 15° y la sujeta con los mismos imanes de la tapa. Es de cantos redondeados y los imanes van **enrasados en la cara delantera** (se pegan desde delante, con la cara buena hacia fuera).
+- En `plana_1200mAh/otros_pies/` hay dos pies alternativos: **low poly** (facetado) y **básico** (con nervios; sus imanes se meten por detrás).
 
 ## Generar los STL (Python 3 + numpy)
-- Plana: `python3 caja_chapa_nh.py <carpeta>` y `python3 caja_chapa_nh.py <carpeta> --pie`
+- Plana: `python3 caja_chapa_nh.py <carpeta>` y `python3 caja_chapa_nh.py <carpeta> --pie` (añade `--todos` para los pies alternativos; necesita scipy)
 - Gruesa: `cd gruesa_800mAh && python3 caja_chapa_nh_v6.py <carpeta>`
 - Otro tamaño de imán: `IMAN_D=8 IMAN_G=2 python3 caja_chapa_nh.py <carpeta>`
 
