@@ -151,26 +151,30 @@ def cuerpo():
         ops += [(0, B(ext, ext + s * r, ty0 - r, ty1 + r, OZ0 - 1, IZ0 + 0.01))]  # corte del extremo
         bcx = (bx0 + bx1) / 2; bcy = (BOT_Y0 + BOT_Y1) / 2
         ops += [(1, B(bcx - 1.1, bcx + 1.1, bcy - 1.1, bcy + 1.1, IZ0 - 0.01, BOT_TECHO - 0.3))]  # tetón
-    # ranuras de cierre: 2 por lado largo, a media altura de la tapa (pared entera ahí)
+    # tapa corredera: carriles en las paredes largas y extremo de la antena abierto
     for sx in (-1, 1):
-        for ya, yb in CIERRES_Y:
-            ops += [(0, B(sx * (IX - 0.01), sx * (IX + 0.6), ya - 0.5, yb + 0.5, OZ1 - 3.1, OZ1 - 1.9))]
-    # muesca para abrir la tapa con la uña (extremo de la antena)
-    ops += [(0, B(-3.0, 3.0, IY1 - 0.01, OY1 + 1, OZ1 - 1.0, OZ1 + 1))]
+        ops += [(0, B(sx * (IX - 0.01), sx * (IX + RAIL_G), IY0, OY1 + 1, OZ1 - RAIL_Z1, OZ1 - RAIL_Z0))]
+        # hueco del "clic" final (la tapa queda enganchada al terminar de entrar)
+        ops += [(0, B(sx * (IX - 0.01), sx * (IX + RAIL_G + 0.25), IY1 - 4.6, IY1 - 1.4, OZ1 - RAIL_Z1, OZ1 - RAIL_Z0))]
+    ops += [(0, B(-IX, IX, IY1 - 0.01, OY1 + 1, OZ1 - TAPA - 0.05, OZ1 + 1))]
     return ops
 
 # ------------------------------------------------------------------ tapa trasera
 CLT = 0.12
-CIERRES_Y = [(10.0, 20.0), (38.0, 48.0)]
+RAIL_Z0, RAIL_Z1 = 1.6, 3.0     # carril, medido desde la cara exterior de la tapa
+RAIL_G = 0.8                    # profundidad del carril en la pared
 def tapa():
     # cara exterior en z=0 (posición de impresión); los huecos se abren hacia dentro
     W = IX - CLT
-    ops = [(1, B(-W, W, IY0 + CLT, IY1 - CLT, 0, TAPA))]
-    # pestañas de cierre con rampa: entra primero la cara interior (z alta)
+    Y1 = OY1 - 0.05                                   # la tapa cierra también el extremo de la antena
+    ops = [(1, B(-W, W, IY0 + CLT, Y1, 0, TAPA))]
     for sx in (-1, 1):
-        for ya, yb in CIERRES_Y:
-            for za, zb, sale in ((2.0, 2.4, 0.45), (2.4, 2.6, 0.33), (2.6, 2.8, 0.21), (2.8, 3.0, 0.09)):
-                ops += [(1, B(sx * (W - 0.01), sx * (IX + sale), ya, yb, za, zb))]
+        # lengüetas que corren por los carriles (holgura 0,15 arriba y abajo, 0,18 al fondo)
+        ops += [(1, B(sx * (W - 0.01), sx * (IX + RAIL_G - 0.18), IY0 + CLT + 0.5, Y1, RAIL_Z0 + 0.15, RAIL_Z1 - 0.15))]
+        # topes del clic
+        ops += [(1, B(sx * (W - 0.01), sx * (IX + RAIL_G + 0.18), IY1 - 4.0, IY1 - 2.0, RAIL_Z0 + 0.15, RAIL_Z1 - 0.15))]
+    # ranura para la uña en la cara exterior, junto al extremo
+    ops += [(0, B(-4.0, 4.0, Y1 - 3.2, Y1 - 2.0, -1, 0.6))]
     pa = IMAN_D + 0.4
     for xc, yc in IMANES:
         ops += [(0, B(xc - pa / 2, xc + pa / 2, yc - pa / 2, yc + pa / 2, PIEL, TAPA + 1))]

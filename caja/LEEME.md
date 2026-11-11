@@ -1,4 +1,4 @@
-# Caja Chapa NH (v5)
+# Caja Chapa NH (v6)
 
 Para LILYGO T-Display S3 + LiPo 802540 (800 mAh) + 5 imanes de disco.
 Medidas de la placa tomadas del modelo 3D oficial de LILYGO.
@@ -17,6 +17,7 @@ Medidas de la placa tomadas del modelo 3D oficial de LILYGO.
 - La zona de la antena (los últimos ~10 mm del extremo contrario al USB) queda libre de imanes.
 - La flecha grabada en la cara interior de la tapa apunta hacia el USB.
 
-## Cierre de la tapa
-- 4 pestañas con rampa (2 por lado largo) que encajan en ranuras del cuerpo.
-- Para abrirla, mete la uña o un destornillador plano en la muesca del extremo de la antena.
+## Cierre de la tapa (corredera)
+- La tapa entra deslizando por dos carriles desde el extremo de la antena y hace clic al final.
+- Los carriles impiden que los imanes la arranquen al quitarte la chapa.
+- Para abrirla, engancha la uña en la ranura de la tapa y deslízala hacia fuera.
