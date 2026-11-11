@@ -152,7 +152,7 @@ footer{text-align:center;font-size:12px;color:var(--mut);margin-top:20px;letter-
 const W = 320, H = 170, SC = 3;
 const cv = document.getElementById('prev'), ctx = cv.getContext('2d');
 ctx.setTransform(SC, 0, 0, SC, 0, 0);
-const st = { nombre: 'ISMAEL', empresa: 'RECEPCIÓN', letra: 0, tam: 0 };
+const st = { nombre: 'MANOLETE', empresa: 'RECEPCIÓN', letra: 0, tam: 0 };
 /* ---------- utilidades ---------- */
 const rnd = (a, b) => a + Math.random() * (b - a);
 const easeOut = x => 1 - Math.pow(1 - Math.min(Math.max(x, 0), 1), 3);
@@ -554,7 +554,7 @@ function textoNombre(cx, cy, maxW, color, opts = {}) {
 }
 
 /* ======== Estado ======== */
-const cfg = { perf: [{ n: 'ISMAEL', e: 'RECEPCIÓN', f: 0, s: 0 }, { n: 'JAVI', e: 'RECEPCIÓN', f: 0, s: 0 }], act: 0, tema: 1, dia: 0, hoy: 0, msg: '', br: 140, sc: 0, col: '1FA3B5' };
+const cfg = { perf: [{ n: 'MANOLETE', e: 'RECEPCIÓN', f: 0, s: 0 }, { n: 'EUSTAKIO', e: 'RECEPCIÓN', f: 0, s: 0 }], act: 0, tema: 1, dia: 0, hoy: 0, msg: '', br: 140, sc: 0, col: '1FA3B5' };
 const $ = id => document.getElementById(id);
 const enc = new TextEncoder(), dec = new TextDecoder();
 let dev = null, cCmd = null, cCfg = null, cola = Promise.resolve(), segRest = 0, temporizador = null;

@@ -4,7 +4,7 @@
 
   Novedades v2
    - Perfiles de usuario (hasta 4): nombre, empresa, tipo de letra y tamaño.
-     Mantener BOOT 2 s cambia de persona (p. ej. Ismael <-> Javi).
+     Mantener BOOT 2 s cambia de persona (p. ej. dos compañeros de recepción).
    - Temas animados: Normal, Navidad, Halloween, Calendario de Adviento
      (puerta que se abre cada día, Nochebuena, Navidad, Nochevieja y Reyes)
      y Automático (elige el tema según la fecha).
@@ -186,7 +186,7 @@ void cargarConfig() {
   prefs.begin("chapa3", true);
   nPerf = prefs.getUChar("np", 2);
   if (nPerf < 1 || nPerf > MAX_PERF) nPerf = 2;
-  const char* defN[MAX_PERF] = { "ISMAEL", "JAVI", "NOMBRE", "NOMBRE" };
+  const char* defN[MAX_PERF] = { "MANOLETE", "EUSTAKIO", "NOMBRE", "NOMBRE" };
   char k[4];
   for (int i = 0; i < MAX_PERF; i++) {
     k[1] = '0' + i; k[2] = 0;
