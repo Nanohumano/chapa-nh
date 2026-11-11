@@ -13,9 +13,9 @@ Chapa de nombre digital con una **LILYGO T-Display S3**: se cambia desde el móv
 | Componente | Detalle |
 |---|---|
 | Placa | LILYGO T-Display S3 (ESP32-S3R8, LCD 1,9" 170×320, 16 MB flash, 8 MB PSRAM) |
-| Batería | LiPo 103040, 1200 mAh, conector JST 1,25 mm (va en plano debajo de la pantalla) |
-| Imanes | Discos de neodimio de 6 × 3 mm: 5 en la tapa, 5 en la contraplaca y 5 en el pie |
-| Caja | 65,6 × 61,6 × 16,2 mm, 3 piezas + pie de mostrador, en PLA y sin soportes (carpeta `caja/`) |
+| Batería | LiPo 103040 de 1200 mAh (caja plana) o 802540 de 800 mAh (caja gruesa), conector JST 1,25 mm |
+| Imanes | Discos de neodimio de 6 × 3 mm: 5 en la tapa, 5 en la contraplaca (y 5 en el pie, si lo haces) |
+| Caja | Dos versiones a elegir, en PLA y sin soportes (ver [Caja](#caja)) |
 
 > Hay una versión AMOLED y otra táctil de la T-Display S3: este firmware y esta caja son para la **versión LCD normal**.
 > Antes de conectar la batería, comprueba que el cable rojo va al **+** de la placa.
@@ -55,18 +55,16 @@ En la app: **Conectar** → **NH-Chapa**. Desde ahí se cambian nombre, empresa 
 
 ## Caja
 
-![Caja](img/caja.png)
+Hay **dos versiones** para elegir; las dos funcionan con el mismo firmware y la misma app. Comparativa completa en [`caja/LEEME.md`](caja/LEEME.md).
 
-| Pieza | Impresión |
-|---|---|
-| `chapa_nh_cuerpo.stl` | Cara de la pantalla sobre la cama |
-| `chapa_nh_tapa.stl` | Cara lisa sobre la cama. Tapa corredera con clic |
-| `chapa_nh_contraplaca.stl` | Cara lisa sobre la cama. Va por dentro de la ropa |
-| `chapa_nh_pie.stl` | Tal cual, sobre la base. Pie de mostrador: la chapa se pega con los imanes |
+| Versión | Batería | Medidas | Piezas |
+|---|---|---|---|
+| [**Plana** (nueva)](caja/plana_1200mAh/) | 103040 · 1200 mAh, en plano bajo la pantalla | 65,6 × 61,6 × 16,2 mm | Cuerpo, tapa, contraplaca y pie de mostrador |
+| [**Gruesa** (original)](caja/gruesa_800mAh/) | 802540 · 800 mAh, detrás de la placa | 29,8 × 65,6 × 22,6 mm | Cuerpo, tapa y contraplaca |
 
-Mirándola de frente: pantalla arriba, batería abajo y USB a la derecha. Detalles de montaje en [`caja/LEEME.md`](caja/LEEME.md). La versión anterior, con la batería 802540 detrás (22,6 mm de grueso), sigue en `caja/v6_bateria_detras/`.
+![Caja plana](img/caja.png)
 
-PLA, capa 0,2 mm, 3 perímetros, relleno 20 %. Los STL se generan con `caja/caja_chapa_nh.py` (Python + numpy), que usa las medidas del modelo 3D oficial de LILYGO.
+PLA, capa 0,2 mm, 3 perímetros, relleno 20 %, sin soportes. Los STL se generan con Python (carpeta `caja/`) a partir de las medidas del modelo 3D oficial de LILYGO.
 
 ## Archivos
 

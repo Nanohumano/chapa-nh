@@ -1,26 +1,33 @@
-# Caja Chapa NH (v7)
+# Caja Chapa NH: elige versión
 
-Para LILYGO T-Display S3 + LiPo **103040 (10 × 30 × 40 mm, 1200 mAh)** + imanes de disco 6 × 3 mm.
-La batería va **en plano debajo de la pantalla**, no detrás: la chapa es más alta pero mucho más fina.
-Medidas de la placa tomadas del modelo 3D oficial de LILYGO.
+Hay dos cajas. Las dos usan la misma placa (LILYGO T-Display S3), el mismo firmware y la misma app, y se sujetan con imanes de disco de 6 × 3 mm.
 
-| Pieza | Imprimir | Notas |
+| | [Plana · 1200 mAh](plana_1200mAh/) (nueva) | [Gruesa · 800 mAh](gruesa_800mAh/) (original) |
 |---|---|---|
-| `chapa_nh_cuerpo.stl` | Cara de la pantalla sobre la cama, sin soportes | Botones flexibles integrados en el marco |
-| `chapa_nh_tapa.stl` | Cara lisa sobre la cama, sin soportes | Tapa corredera con clic y 5 huecos para imanes |
-| `chapa_nh_contraplaca.stl` | Cara lisa sobre la cama | Va por dentro de la ropa (5 imanes) |
-| `chapa_nh_pie.stl` | Tal cual, sobre la base, sin soportes | Pie de mostrador inclinado 15°, 5 imanes por detrás |
+| Vista previa | ![plana](plana_1200mAh/preview.png) | ![gruesa](gruesa_800mAh/preview.png) |
+| Batería | LiPo **103040** (10 × 30 × 40 mm), 1200 mAh | LiPo **802540** (8 × 25 × 40 mm), 800 mAh |
+| Dónde va la batería | En plano, debajo de la pantalla | Detrás de la placa |
+| Medidas | 65,6 × 61,6 × **16,2 mm** | 29,8 × 65,6 × **22,6 mm** |
+| Forma | Casi cuadrada, más fina | Alargada, más gruesa |
+| Piezas | Cuerpo, tapa, contraplaca y **pie de mostrador** | Cuerpo, tapa y contraplaca |
+| Imanes | 5 tapa + 5 contraplaca + 5 pie | 5 tapa + 5 contraplaca |
 
-- Exterior: 65,6 × 61,6 × 16,2 mm (antes 22,6 mm de grueso). Mirándola de frente: pantalla arriba, batería abajo, USB a la derecha.
-- PLA o PETG, capa 0,2 mm, 3 perímetros, relleno 20 %.
-- Imanes: 15 discos de 6 × 3 mm si haces chapa, contraplaca y pie. Para otro tamaño: `IMAN_D=8 IMAN_G=2 python3 caja_chapa_nh.py .`
-- Antes de pegar los imanes, comprueba que se atraen (tapa con contraplaca y tapa con pie).
-- El hueco de la batería es más largo que la batería: sujétala con cinta de doble cara. El cable pasa por detrás de la placa.
-- **Conector:** la placa usa JST de 1,25 mm. Muchas 103040 traen otro mayor: cámbialo y comprueba que el rojo va al «+».
-- El botón RST del canto queda hacia la batería: se pulsa con la tapa abierta.
+## Impresión (las dos)
+- PLA o PETG, capa 0,2 mm, 3 perímetros, relleno 20 %, sin soportes.
+- Cuerpo con la cara de la pantalla sobre la cama; tapa y contraplaca con la cara lisa sobre la cama; el pie tal cual, sobre su base.
+- Antes de pegar los imanes, comprueba que se atraen (tapa con contraplaca, y tapa con pie).
 - La tapa entra deslizando desde el extremo de la antena y hace clic al final. Para abrirla, engancha la uña en la ranura.
+- **Conector:** la placa usa JST de 1,25 mm. Si tu batería trae otro, cámbialo y comprueba que el cable rojo va al «+».
 
-Generar: `python3 caja_chapa_nh.py .` y `python3 caja_chapa_nh.py . --pie` (Python 3 + numpy).
-Vista previa: `python3 preview7.py <t-display-s3-full.stl>`.
+## Notas de la versión plana
+- Mirándola de frente: pantalla arriba, batería abajo y USB a la derecha.
+- El hueco de la batería es más largo que la batería: sujétala con cinta de doble cara. El cable pasa por detrás de la placa.
+- El botón RST del canto queda hacia la batería: se pulsa con la tapa abierta.
+- El pie inclina la chapa 15° y la sujeta con los mismos imanes de la tapa.
 
-La versión anterior (batería 802540 detrás de la placa, 22,6 mm de grueso) está en `v6_bateria_detras/`.
+## Generar los STL (Python 3 + numpy)
+- Plana: `python3 caja_chapa_nh.py <carpeta>` y `python3 caja_chapa_nh.py <carpeta> --pie`
+- Gruesa: `cd gruesa_800mAh && python3 caja_chapa_nh_v6.py <carpeta>`
+- Otro tamaño de imán: `IMAN_D=8 IMAN_G=2 python3 caja_chapa_nh.py <carpeta>`
+
+Las medidas de la placa salen del modelo 3D oficial de LILYGO.

@@ -6,7 +6,7 @@ spec = importlib.util.spec_from_file_location("c", "caja_chapa_nh.py"); c = impo
 def load(p):
     b = open(p, "rb").read(); n = struct.unpack("<I", b[80:84])[0]
     return np.frombuffer(b[84:84 + n * 50], dtype=np.dtype([("n", "<3f4"), ("v", "<9f4"), ("a", "<u2")]))["v"].reshape(-1, 3, 3).astype(float)
-cu = load("v7/chapa_nh_cuerpo.stl"); ta = load("v7/chapa_nh_tapa.stl"); pie = load("v7/chapa_nh_pie.stl")
+cu = load("plana_1200mAh/chapa_nh_cuerpo.stl"); ta = load("plana_1200mAh/chapa_nh_tapa.stl"); pie = load("plana_1200mAh/chapa_nh_pie.stl")
 bd = load(sys.argv[1])
 ta_b = ta.copy(); ta_b[..., 2] = c.OZ1 - ta_b[..., 2]
 bat = c.triangulos(*c.solido([(1, c.B(c.BX0 + 0.2, c.BX1 - 0.2, 10.0, 50.0, c.IZ0, c.IZ0 + 10.0))]))
