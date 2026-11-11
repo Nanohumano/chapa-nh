@@ -311,7 +311,9 @@ int decodificarUtf8(const String& s, Glifo* out, int maxN) {
   return n;
 }
 
-int anchoCar(TFT_eSPI& g, char c) { char s[2] = { c, 0 }; return g.textWidth(s); }
+// Avance real de un carácter. textWidth() de una sola letra devuelve solo la parte
+// dibujada (un espacio mide 0), así que se mide "c|" y se resta "|".
+int anchoCar(TFT_eSPI& g, char c) { char s[3] = { c, '|', 0 }; return g.textWidth(s) - g.textWidth("|"); }
 
 int anchoUtf8(TFT_eSPI& g, const String& s) {
   Glifo gl[64];
