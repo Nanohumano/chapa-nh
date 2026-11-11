@@ -31,16 +31,16 @@ BOT_Y0, BOT_Y1, BOT_TECHO = 0.53, 3.99, -3.70   # techo real del pulsador
 RST = dict(y0=8.01, y1=12.61, z0=0.0, z1=1.8)  # pulsador lateral en x+
 COMP_ATRAS = 2.0      # componente más alto detrás, fuera de los conectores
 
-# Batería 802540 (8 x 25 x 40) con margen
-BAT_G, BAT_A, BAT_L = 8.3, 25.6, 40.8
-BAT_Y0 = 7.8
+# Batería 103040 (10 x 30 x 40, 1200 mAh) con margen. v7: va AL LADO de la placa (lado x-),
+# en plano, no detrás: la chapa queda más alta pero mucho más fina.
+BAT_G, BAT_A, BAT_L = 10.3, 30.6, 40.8   # 103040 de 1200 mAh (10 x 30 x 40)
+SEP = 1.2             # tabique entre placa y batería (solo hasta la cara trasera del PCB)
 
 # Imanes (disco); el hueco es cuadrado, vale para discos
 IMAN_D, IMAN_G = float(os.environ.get("IMAN_D", 6.0)), float(os.environ.get("IMAN_G", 3.0))
 PIEL = 1.0            # plástico entre imán y ropa
 # 5 imanes: 2 en cada extremo + 1 en el centro (x, y). Van dentro de la tapa,
 # así que pueden ir encima de la batería; ninguno en la zona de la antena (y > 50)
-IMANES = [(-8.5, 4.0), (8.5, 4.0), (0.0, 25.5), (-8.5, 47.0), (8.5, 47.0)]
 TAPA = PIEL + IMAN_G + 0.3   # grosor de la tapa: piel + hueco del imán
 
 # ------------------------------------------------------------------ derivadas
@@ -48,10 +48,17 @@ IX = LCD_X + HOLG                      # medio ancho interior
 IY0 = -1.35                            # interior lado USB (el USB queda dentro)
 IY1 = PCB_Y1 + HOLG
 IZ0 = LCD_Z                            # el cristal apoya en el marco
-BAT_Z0 = COMP_ATRAS + 0.2
-IZ1 = BAT_Z0 + BAT_G + 0.2             # cara interior de la tapa
+# La batería va en el lado x+ (el del RST): con la pantalla arriba y la batería
+# abajo, el USB queda a la derecha mirando la chapa de frente.
+BX0, BX1 = IX + SEP, IX + SEP + BAT_A   # hueco de la batería
+XI0, XI1 = -IX, BX1                     # interior completo
+IZ1 = max(COMP_ATRAS + 0.3, IZ0 + BAT_G + 0.4)   # cara interior de la tapa
 OX, OY0, OY1 = IX + PARED, IY0 - PARED, IY1 + PARED
+XO0, XO1 = XI0 - PARED, XI1 + PARED
 OZ0, OZ1 = IZ0 - FRENTE, IZ1 + TAPA
+# 5 imanes: 2 en cada extremo + 1 en el centro, ninguno sobre la antena (placa, y > 50)
+_xl, _xr = XI0 + 4.8, XI1 - 5.5
+IMANES = [(_xl, 4.0), (_xr, 4.0), ((_xl + _xr) / 2, 25.5), (_xl, 47.0), (_xr, 47.0)]
 
 def B(x0, x1, y0, y1, z0, z1):
     return (min(x0, x1), max(x0, x1), min(y0, y1), max(y0, y1), min(z0, z1), max(z0, z1))
@@ -126,16 +133,17 @@ def stl(path, tris, nombre):
 
 # ------------------------------------------------------------------ cuerpo
 def cuerpo():
-    ops = [(1, B(-OX, OX, OY0, OY1, OZ0, OZ1))]
-    ops += [(0, B(-IX, IX, IY0, IY1, IZ0, OZ1 + 1))]                  # hueco
+    ops = [(1, B(XO0, XO1, OY0, OY1, OZ0, OZ1))]
+    ops += [(0, B(-IX, IX, IY0, IY1, IZ0, OZ1 + 1))]                  # hueco de la placa
+    ops += [(0, B(BX0, BX1, IY0, IY1, IZ0, OZ1 + 1))]           # hueco de la batería
+    ops += [(0, B(XI0, XI1, IY0, IY1, PCB_Z0, OZ1 + 1))]               # paso del cable por detrás
     # ventana de la pantalla (zona visible + 0.25)
     ops += [(0, B(-VIS_X - 0.25, VIS_X + 0.25, VIS_Y0 - 0.25, VIS_Y1 + 0.25, OZ0 - 1, IZ0 + 0.01))]
     # USB-C: hueco para el conector y la funda del cable
     ucx = (USB["x0"] + USB["x1"]) / 2; ucz = (USB["z0"] + USB["z1"]) / 2
     ops += [(0, B(ucx - 5.6, ucx + 5.6, OY0 - 1, IY0 + 0.01, ucz - 2.6, ucz + 2.6))]
     # RST lateral (x+)
-    ry = (RST["y0"] + RST["y1"]) / 2
-    ops += [(0, B(IX - 0.01, OX + 1, ry - 1.4, ry + 1.4, RST["z0"] - 0.3, RST["z1"] + 0.5))]
+    # (el RST lateral queda hacia el hueco de la batería: se pulsa con la tapa abierta)
     # topes del borde del PCB en el lado USB
     for sx in (-1, 1):
         ops += [(1, B(sx * 12.2, sx * IX, IY0, -0.15, IZ0, 0.0))]
@@ -152,11 +160,11 @@ def cuerpo():
         bcx = (bx0 + bx1) / 2; bcy = (BOT_Y0 + BOT_Y1) / 2
         ops += [(1, B(bcx - 1.1, bcx + 1.1, bcy - 1.1, bcy + 1.1, IZ0 - 0.01, BOT_TECHO - 0.3))]  # tetón
     # tapa corredera: carriles en las paredes largas y extremo de la antena abierto
-    for sx in (-1, 1):
-        ops += [(0, B(sx * (IX - 0.01), sx * (IX + RAIL_G), IY0, OY1 + 1, OZ1 - RAIL_Z1, OZ1 - RAIL_Z0))]
+    for sx, w in ((1, XI1), (-1, XI0)):
+        ops += [(0, B(w - sx * 0.01, w + sx * RAIL_G, IY0, OY1 + 1, OZ1 - RAIL_Z1, OZ1 - RAIL_Z0))]
         # hueco del "clic" final (la tapa queda enganchada al terminar de entrar)
-        ops += [(0, B(sx * (IX - 0.01), sx * (IX + RAIL_G + 0.25), IY1 - 4.6, IY1 - 1.4, OZ1 - RAIL_Z1, OZ1 - RAIL_Z0))]
-    ops += [(0, B(-IX, IX, IY1 - 0.01, OY1 + 1, OZ1 - TAPA - 0.05, OZ1 + 1))]
+        ops += [(0, B(w - sx * 0.01, w + sx * (RAIL_G + 0.25), IY1 - 4.6, IY1 - 1.4, OZ1 - RAIL_Z1, OZ1 - RAIL_Z0))]
+    ops += [(0, B(XI0, XI1, IY1 - 0.01, OY1 + 1, OZ1 - TAPA - 0.05, OZ1 + 1))]
     return ops
 
 # ------------------------------------------------------------------ tapa trasera
@@ -165,22 +173,22 @@ RAIL_Z0, RAIL_Z1 = 1.6, 3.0     # carril, medido desde la cara exterior de la ta
 RAIL_G = 0.8                    # profundidad del carril en la pared
 def tapa():
     # cara exterior en z=0 (posición de impresión); los huecos se abren hacia dentro
-    W = IX - CLT
     Y1 = OY1 - 0.05                                   # la tapa cierra también el extremo de la antena
-    ops = [(1, B(-W, W, IY0 + CLT, Y1, 0, TAPA))]
-    for sx in (-1, 1):
+    ops = [(1, B(XI0 + CLT, XI1 - CLT, IY0 + CLT, Y1, 0, TAPA))]
+    for sx, w in ((1, XI1), (-1, XI0)):
         # lengüetas que corren por los carriles (holgura 0,15 arriba y abajo, 0,18 al fondo)
-        ops += [(1, B(sx * (W - 0.01), sx * (IX + RAIL_G - 0.18), IY0 + CLT + 0.5, Y1, RAIL_Z0 + 0.15, RAIL_Z1 - 0.15))]
+        ops += [(1, B(w - sx * (CLT + 0.01), w + sx * (RAIL_G - 0.18), IY0 + CLT + 0.5, Y1, RAIL_Z0 + 0.15, RAIL_Z1 - 0.15))]
         # topes del clic
-        ops += [(1, B(sx * (W - 0.01), sx * (IX + RAIL_G + 0.18), IY1 - 4.0, IY1 - 2.0, RAIL_Z0 + 0.15, RAIL_Z1 - 0.15))]
+        ops += [(1, B(w - sx * (CLT + 0.01), w + sx * (RAIL_G + 0.18), IY1 - 4.0, IY1 - 2.0, RAIL_Z0 + 0.15, RAIL_Z1 - 0.15))]
+    cxt = (XI0 + XI1) / 2
     # ranura para la uña en la cara exterior, junto al extremo
-    ops += [(0, B(-4.0, 4.0, Y1 - 3.2, Y1 - 2.0, -1, 0.6))]
+    ops += [(0, B(cxt - 4.0, cxt + 4.0, Y1 - 3.2, Y1 - 2.0, -1, 0.6))]
     pa = IMAN_D + 0.4
     for xc, yc in IMANES:
         ops += [(0, B(xc - pa / 2, xc + pa / 2, yc - pa / 2, yc + pa / 2, PIEL, TAPA + 1))]
     # flecha hacia el USB en la cara interior
-    ops += [(0, B(-1.0, 1.0, 12, 20, TAPA - 0.4, TAPA + 1))]
-    ops += [(0, B(-2.5, 2.5, 10, 12, TAPA - 0.4, TAPA + 1))]
+    ops += [(0, B(cxt - 1.0, cxt + 1.0, 12, 20, TAPA - 0.4, TAPA + 1))]
+    ops += [(0, B(cxt - 2.5, cxt + 2.5, 10, 12, TAPA - 0.4, TAPA + 1))]
     return ops, TAPA
 
 def contraplaca():
@@ -191,8 +199,9 @@ def contraplaca():
     y0, y1 = min(ys) - pa / 2 - m, max(ys) + pa / 2 + m
     ops = [(1, B(x0, x1, y0, y1, 0, G))]
     # aligerado: ventanas entre imanes
-    ops += [(0, B(x0 + 3.5, -pa / 2 - 1.5, 4.0 + pa / 2 + 1.5, 47.0 - pa / 2 - 1.5, -1, G + 1))]
-    ops += [(0, B(pa / 2 + 1.5, x1 - 3.5, 4.0 + pa / 2 + 1.5, 47.0 - pa / 2 - 1.5, -1, G + 1))]
+    xc = IMANES[2][0]
+    ops += [(0, B(x0 + 3.5, xc - pa / 2 - 1.5, 4.0 + pa / 2 + 1.5, 47.0 - pa / 2 - 1.5, -1, G + 1))]
+    ops += [(0, B(xc + pa / 2 + 1.5, x1 - 3.5, 4.0 + pa / 2 + 1.5, 47.0 - pa / 2 - 1.5, -1, G + 1))]
     for xc, yc in IMANES:
         ops += [(0, B(xc - pa / 2, xc + pa / 2, yc - pa / 2, yc + pa / 2, PIEL, G + 1))]
     return ops, (x1 - x0, y1 - y0, G)
@@ -237,7 +246,7 @@ def barrido(x0, x1, y0, y1, R, perfil, nc=10):
 
 def redondear_cuerpo(tris):
     import csg
-    piel = barrido(-OX, OX, OY0, OY1, RADIO, _perfil(OZ0, OZ1, R_CANTO, R_CANTO, 8))
+    piel = barrido(XO0, XO1, OY0, OY1, RADIO, _perfil(OZ0, OZ1, R_CANTO, R_CANTO, 8))
     A = csg.intersect(csg.from_tris(tris), csg.from_tris(piel))
     # canto redondeado de la ventana: cortador que se abre hacia la cara frontal
     vx, vy0, vy1 = VIS_X + 0.25, VIS_Y0 - 0.25, VIS_Y1 + 0.25
@@ -252,7 +261,7 @@ def redondear_contraplaca(tris, x0, x1, y0, y1, G):
     piel = barrido(x0, x1, y0, y1, RADIO, _perfil(0, G, R_CANTO, R_CANTO, 8))
     return csg.reparar_t(csg.to_tris(csg.intersect(csg.from_tris(tris), csg.from_tris(piel))))
 
-if __name__ == "__main__":
+if __name__ == "__main__" and "--pie" not in sys.argv:
     out = sys.argv[1] if len(sys.argv) > 1 else "."
     c = redondear_cuerpo(triangulos(*solido(cuerpo())))
     stl(f"{out}/chapa_nh_cuerpo.stl", c, "Chapa NH cuerpo")
@@ -263,10 +272,47 @@ if __name__ == "__main__":
     xs_, ys_, zs_, _ = solido(p_ops)
     p = redondear_contraplaca(triangulos(*solido(p_ops)), xs_[0], xs_[-1], ys_[0], ys_[-1], zs_[-1] - 1)
     stl(f"{out}/chapa_nh_contraplaca.stl", p, "Chapa NH contraplaca")
-    print("Exterior caja: %.1f x %.1f x %.1f mm" % (2 * OX, OY1 - OY0, OZ1 - OZ0))
-    print("Interior:      %.1f x %.1f x %.1f mm" % (2 * IX, IY1 - IY0, IZ1 - IZ0))
-    print("Hueco bateria: %.1f mm de alto (bat %.1f)  y %.1f-%.1f (antena libre desde %.1f)" %
-          (IZ1 - BAT_Z0, BAT_G, BAT_Y0, BAT_Y0 + BAT_L, BAT_Y0 + BAT_L))
+    print("Exterior caja: %.1f x %.1f x %.1f mm" % (XO1 - XO0, OY1 - OY0, OZ1 - OZ0))
+    print("Hueco bateria: %.1f x %.1f x %.1f mm (bat %.1f x %.1f x %.1f)" %
+          (BX1 - BX0, IY1 - IY0, IZ1 - IZ0, BAT_A, BAT_L, BAT_G))
+    print("Imanes:", [(round(x, 1), y) for x, y in IMANES])
     print("Tapa: %.1f mm de grueso, 5 imanes" % ab)
     print("Contraplaca: %.1f x %.1f x %.1f mm" % dims)
     print("Triangulos:", len(c), len(t), len(p))
+
+# ------------------------------------------------------------------ pie de mostrador
+PIE_ANG = 15.0      # inclinación hacia atrás
+def pie():
+    """Soporte de mostrador: placa inclinada con 5 imanes (misma posición que la tapa),
+    repisa abajo y base con nervios. Ejes: X = largo de la chapa, Y = hacia atrás, Z = arriba.
+    La chapa se apoya con la batería abajo: punto (x, y) de la tapa -> (X = -y, altura = XO1 - x)."""
+    import csg
+    G = IMAN_G + 0.3 + PIEL; pa = IMAN_D + 0.4; H = XO1 - XO0
+    U0, U1 = -OY1, -OY0
+    a = np.radians(PIE_ANG); ca, sa = np.cos(a), np.sin(a)
+    BASE = 3.0; REP = 3.0
+    def malla(ops): return triangulos(*solido(ops))
+    def gira(t, z0):
+        t = t.copy(); u, v, w = t[..., 0].copy(), t[..., 1].copy(), t[..., 2].copy()
+        t[..., 0] = u; t[..., 1] = w * ca + v * sa; t[..., 2] = v * ca - w * sa + z0
+        return t[:, [0, 2, 1]]          # el cambio de ejes es una simetría: se invierte el giro de los triángulos
+    z0 = BASE + REP * ca + 0.2
+    # placa (u, v, w): w = 0 cara delantera (donde se pega la chapa)
+    ops = [(1, B(U0, U1, -REP, H, 0, G))]
+    ops += [(1, B(U0, U1, -REP, 0, -9.0, G))]                     # repisa donde apoya la chapa
+    for xc, yc in IMANES:
+        ops += [(0, B(-yc - pa / 2, -yc + pa / 2, XO1 - xc - pa / 2, XO1 - xc + pa / 2, PIEL, G + 1))]
+    placa = csg.from_tris(gira(malla(ops), z0))
+    delante_t = gira(malla([(1, B(U0 - 5, U1 + 5, -20, H + 20, -60, G - 0.5))]), z0)
+    A = placa
+    A = csg.union(A, csg.from_tris(malla([(1, B(U0, U1, -10.0, 32.0, 0, BASE))])))
+    for r0 in (U0, -36.0 - 1.5, U1 - 3.0):                        # nervios fuera de los imanes
+        rib = csg.from_tris(malla([(1, B(r0, r0 + 3.0, -5.0, 32.0, 0.5, 34.0))]))
+        A = csg.union(A, csg.subtract(rib, csg.from_tris(delante_t)))  # csg invierte en sitio: copia nueva
+    suelo = csg.from_tris(malla([(1, B(U0 - 20, U1 + 20, -40, 60, 0, 120))]))
+    return csg.reparar_t(csg.to_tris(csg.intersect(A, suelo)))
+
+if __name__ == "__main__" and "--pie" in sys.argv:
+    out = sys.argv[1]
+    stl(f"{out}/chapa_nh_pie.stl", pie(), "Chapa NH pie")
+    print("pie listo")
