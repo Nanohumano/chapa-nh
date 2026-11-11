@@ -529,24 +529,28 @@ const CSSF = [
   '700 {s}px "Courier New", Courier, monospace',
   'italic 700 {s}px Helvetica, Arial, sans-serif'
 ];
-const PX = [18, 24, 35, 47];   // 9, 12, 18 y 24 pt de la chapa
+const NIV = [94, 70, 47, 35, 24, 18];   // 24pt x2, 18pt x2, 24pt, 18pt, 12pt, 9pt de la chapa
+const INICIO_TAM = [0, 3, 2, 0];        // auto, pequeño, mediano, grande
 function fuente(px) { return CSSF[st.letra].replace('{s}', px); }
 function textoNombre(cx, cy, maxW, color, opts = {}) {
   const nom = st.nombre || ' ';
   const emp = opts.linea2 !== undefined ? opts.linea2 : st.empresa;
-  let idx = 3;
-  if (st.tam === 0) { for (idx = 3; idx > 0; idx--) { ctx.font = fuente(PX[idx]); if (ctx.measureText(nom).width <= maxW) break; } }
-  else idx = st.tam;
-  const px = PX[idx]; ctx.font = fuente(px);
-  const capH = px * 0.72, subPx = PX[idx >= 2 ? 1 : 0] * 0.8;
-  const alto = capH + (emp ? subPx * 1.3 : 0), top = cy - alto / 2;
+  let k = INICIO_TAM[st.tam % 4], subPx = 0;
+  for (; k < 5; k++) {
+    subPx = emp ? (NIV[k] >= 35 ? 19 : 14) : 0;
+    ctx.font = fuente(NIV[k]);
+    if (ctx.measureText(nom).width <= maxW && NIV[k] * 0.72 + subPx * 1.3 <= H - 12) break;
+  }
+  const px = NIV[k]; ctx.font = fuente(px);
+  const capH = px * 0.72, alto = capH + (emp ? subPx * 1.3 : 0);
+  const top = Math.max(4, cy - alto / 2);
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
   if (opts.glow) { ctx.shadowColor = opts.glow; ctx.shadowBlur = 6; }
   ctx.fillStyle = color; ctx.fillText(nom, cx, top + capH);
   ctx.shadowBlur = 0;
   const w = ctx.measureText(nom).width;
   if (emp) { ctx.font = `700 ${subPx}px Helvetica, Arial, sans-serif`; ctx.fillStyle = opts.sub || '#aaa'; ctx.fillText(emp, cx, top + capH + subPx * 1.25); }
-  return { x: cx - w / 2, y: top, w, px: px * 0.9 };
+  return { x: cx - w / 2, y: top, w, px: capH };
 }
 
 /* ======== Estado ======== */
@@ -711,7 +715,7 @@ function loop(now) {
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
     nieve(dt, 80, 0.3); bombillas(t, ['#e23b3b', '#2fbf71', '#f5d76e', '#7ec8ff']);
     const r = textoNombre(W / 2, 90, 280, '#fff', { sub: '#f5d76e' });
-    gorro(r.x + r.px * 0.25, r.y + 2, r.px / 42);
+    gorro(r.x + r.px * 0.3, r.y + 2, r.px / 30);
   } else if (tema === 2) {
     halloween(t, dt); textoNombre(W / 2 + 10, 88, 250, '#ff8a1c', { sub: '#b06cff', glow: '#ff5a00' });
   } else if (tema === 3) {

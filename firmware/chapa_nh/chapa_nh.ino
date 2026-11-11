@@ -368,28 +368,33 @@ void dibujarUtf8(TFT_eSPI& g, const String& s, int x, int y, uint8_t alinear, ui
 }
 
 // Nombre y segunda línea del perfil activo, centrados en (cx, cy)
+// Niveles de tamaño, de mayor a menor: {fuente (0=9pt .. 3=24pt), aumento}
+const uint8_t NIV[6][2] = { { 3, 2 }, { 2, 2 }, { 3, 1 }, { 2, 1 }, { 1, 1 }, { 0, 1 } };
+// Por dónde empieza cada tamaño: automático y grande desde el doble de 24 pt,
+// mediano desde 24 pt y pequeño desde 18 pt (si no cabe, va bajando)
+const uint8_t INICIO_TAM[4] = { 0, 3, 2, 0 };
+
 Caja textoNombre(TFT_eSPI& g, int cx, int cy, int maxW, uint16_t col, uint16_t colSub, const String& linea2) {
   Perfil& p = P();
-  int idx = 3;
-  if (p.tam == 0) {
-    for (idx = 3; idx > 0; idx--) {
-      g.setFreeFont(FUENTE[p.letra][idx]);
-      if (anchoUtf8(g, p.nombre) <= maxW) break;
-    }
-  } else idx = p.tam;
-  g.setFreeFont(FUENTE[p.letra][idx]);
-  int px = g.fontHeight();
-  int capH = (px * 62) / 100;
-  int subIdx = idx >= 2 ? 1 : 0;
   int subH = 0;
-  if (linea2.length()) { g.setFreeFont(FUENTE[0][subIdx]); subH = g.fontHeight(); }
-  int alto = capH + (linea2.length() ? subH : 0);
+  int k = INICIO_TAM[p.tam % 4];
+  for (; k < 5; k++) {
+    g.setTextSize(1); g.setFreeFont(FUENTE[0][NIV[k][0] >= 2 ? 1 : 0]);
+    subH = linea2.length() ? g.fontHeight() : 0;
+    g.setFreeFont(FUENTE[p.letra][NIV[k][0]]); g.setTextSize(NIV[k][1]);
+    int capH = (g.fontHeight() * 62) / 100;
+    if (anchoUtf8(g, p.nombre) <= maxW && capH + subH <= H - 12) break;
+  }
+  g.setFreeFont(FUENTE[p.letra][NIV[k][0]]); g.setTextSize(NIV[k][1]);
+  int capH = (g.fontHeight() * 62) / 100;
+  int alto = capH + subH;
   int top = cy - alto / 2;
-  g.setFreeFont(FUENTE[p.letra][idx]);
+  if (top < 4) top = 4;
   int w = anchoUtf8(g, p.nombre);
   dibujarUtf8(g, p.nombre, cx, top + capH, 1, col);
+  g.setTextSize(1);
   if (linea2.length()) {
-    g.setFreeFont(FUENTE[0][subIdx]);
+    g.setFreeFont(FUENTE[0][NIV[k][0] >= 2 ? 1 : 0]);
     dibujarUtf8(g, linea2, cx, top + capH + (subH * 9) / 10, 1, colSub);
   }
   Caja r = { cx - w / 2, top, w, capH };
