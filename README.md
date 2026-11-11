@@ -5,7 +5,7 @@
 Chapa de nombre digital con una **LILYGO T-Display S3**: se cambia desde el móvil por Bluetooth, la pueden compartir varias personas y tiene temas animados de Navidad, Halloween y un calendario de Adviento hasta Reyes. La caja se imprime en 3D y se sujeta a la ropa con imanes.
 
 - 🎬 **Vídeo:** https://youtu.be/ANPzw-ODm4M
-- 🖨️ **STL (Printables):** [ENLACE PRINTABLES]
+- 🖨️ **STL (Printables):** https://www.printables.com/model/1909584
 - 📱 **App de control:** https://nanohumano.github.io/chapa-nh/ (Chrome o Edge, en Android o PC con Bluetooth)
 
 ## Hardware
@@ -72,6 +72,13 @@ PLA, capa 0,2 mm, 3 perímetros, relleno 20 %. Los STL se generan con `caja/caja
 | `firmware/chapa_nh/chapa_nh.ino` | Firmware para Arduino IDE |
 | `index.html` | App web de control (GitHub Pages) |
 | `caja/` | STL, generador de la caja e imágenes |
+
+## Opina, pregunta o propón mejoras
+
+- 💬 **Ideas, dudas y fotos de tu chapa:** pestaña [Discussions](https://github.com/Nanohumano/chapa-nh/discussions)
+- 🐞 **Algo no funciona:** abre un [Issue](https://github.com/Nanohumano/chapa-nh/issues) (placa, versión del core y qué ves en pantalla)
+- 🛠️ **Quieres cambiar el código:** haz un *fork* y envía un *pull request*. Lo reviso antes de aceptarlo; nadie más puede modificar este repositorio directamente.
+- ⭐ Si te gusta, deja una estrella y cuéntalo en los comentarios del [vídeo](https://youtu.be/ANPzw-ODm4M) o de [Printables](https://www.printables.com/model/1909584).
 
 ## Licencia
 
